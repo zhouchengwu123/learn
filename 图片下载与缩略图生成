@@ -1,0 +1,47 @@
+    /*
+     * 根据完整的URL地址下载图片到指定路径
+     *@$url string 远程图片地址
+     *@$dir string 目录，可选 ，默认为upload_rootpath
+     *@$filename string 新文件名，可选
+     */
+    public function GrabImage($url, $dir='', $filename=''){
+        if(empty($url)){
+            return false;
+        }
+        $ext = strrchr($url, '.');
+        if($ext != '.gif' && $ext != ".jpg" && $ext != ".png" && $ext != ".bmp"){
+            return false;
+        }
+        $dir = empty($dir)?'':$dir.'/';
+        $dir =$this->upload_rootpath.$dir;
+        if (!file_exists($dir)){
+            mkdir($dir);
+        }
+        //目录+文件
+        $filename = $dir . (empty($filename) ? 'jd'.time().rand(1000,9999).$ext : $filename);
+        //开始捕捉
+        ob_start();
+        readfile($url);
+        $img = ob_get_contents();
+        ob_end_clean();
+        $fp2 = fopen($filename , "a");
+        fwrite($fp2, $img);
+        fclose($fp2);
+        $this->create_thumb($filename, $filename,640,640);
+        return $filename;
+    }
+    
+    /*
+     * 生成缩略图 by lxh
+     * $in 原图位置  ./Upload/test/2014-4-21/test.jpg
+     * $out 生成位置  如/Upload/test下 ，只需填test
+     * $w  宽
+     * $h  高
+     * $type  tp的参数，默认为2缩放后填充, 1为等比缩放
+     * */
+    public function create_thumb($in, $out, $w = 150, $h = 150, $type = 2)
+    {
+        $image = new \Think\Image(); //图片处理类
+        $image->open($in);
+        $image->thumb($w, $h, $type)->save($out);
+    }
